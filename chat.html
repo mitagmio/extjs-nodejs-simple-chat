@@ -1,0 +1,146 @@
+<html>
+<head>
+	<link rel="stylesheet" type="text/css" href="http://vreshenie.ru/ext/resources/css/ext-all.css" /> 
+    <link rel="stylesheet" type="text/css" href="http://vreshenie.ru/ext/resources/css/xtheme-gray.css" />
+	<script type="text/javascript" src="http://vreshenie.ru/ext/adapter/ext/ext-base.js"></script> 
+	<script type="text/javascript" src="http://vreshenie.ru/ext/ext-all-zip.php"></script> 
+	<script src="http://vreshenie.ru/work/comet/cross-domain/extjs-cross-domain.js"></script>
+	<style>
+		.icon-user {
+			background-image: url(<a href="http://www.vreshenie.ru/resources/user.png" title="http://www.vreshenie.ru/resources/user.png" class="liexternal">http://www.vreshenie.ru/resources/user.png</a>) !important;
+		}
+		.icon-pencil {
+			background-image: url(<a href="http://www.vreshenie.ru/resources/pencil.png" title="http://www.vreshenie.ru/resources/pencil.png" class="liexternal">http://www.vreshenie.ru/resources/pencil.png</a>) !important;
+}		Ъ
+	</style>
+<script>
+var messages = [];
+Ext.onReady(function(){
+	
+	function sendMessage(login){
+		var msg = Ext.getCmp('idMsgChat').getValue();
+		if(msg.length!=0){
+			crossDomainRequest('sendMessage',{login:window.login,msg:msg,action:'sendMessage'})
+		}
+	}
+
+	function runLoginedChat(){
+		var win = Ext.getCmp('windowChat');
+		win.setTitle('Кросс доменный comet chat на ExtJS+nodeJS');
+		
+		var login = Ext.getCmp('login');			
+		win.items.items[1].el.fadeOut({callback:function(){
+			login.hide();
+		}});
+		
+		var buttonLogin = Ext.getCmp('idLoginButton');
+		buttonLogin.setText('Отослать');
+		buttonLogin.setIconClass('icon-pencil');
+		buttonLogin.setHandler(sendMessage,{login:login});
+		
+		var xy=win.getPosition();
+		var x = xy[0]-100;
+		var y = xy[1]-100;
+		win.el.shift({
+			x: x,
+			y: y,
+			duration:1,
+			//easing:effect,
+			callback:function(){
+				win.el.shift({
+					width:400,
+					callback:function(){
+						win.setWidth(400);
+						win.setHeight(300);
+						crossDomainRequest('getMessage',{login:window.login,action:'getMessage'});
+						Ext.getCmp('idMsgChat').show();
+						Ext.getCmp('serverMessage').show();
+					}					
+				});
+			}
+		});
+	}
+	
+	function crossDomainRequest(action,params){
+		Ext.Ajax.request({
+			timeout:300,
+			url: 'http://nodejs.tmweb.ru:8008/',
+			params:params || {},
+			scriptTag: true,
+			success: function(r) {
+				var message = r.responseObject.text;
+				var login = r.responseObject.login;
+				//console.log(message);
+				//console.log(r);
+				if(action=='getMessage'){
+					if(!r.responseObject.reconnect){
+						messages.push({msg:message,login:login});
+						var str=' ';
+						messages.forEach(function(v){
+							str+= "" + v.login+": "+v.msg+'<br>';
+						});
+						Ext.getCmp('serverMessage').update(str);
+					}
+					crossDomainRequest('getMessage',{login:window.login,action:'getMessage'});
+				}
+				if(action=='login'){
+					//Ext.getCmp('serverMessage').update("Сообщение "+message+" ");
+					runLoginedChat();
+					//console.log(message);
+				}
+				if(action=='sendMessage'){}
+			},			
+			failure:function(){
+				console.log('failure');
+				if(action=='getMessage'){
+					crossDomainRequest('getMessage',{login:window.login,action:'getMessage'});
+				}
+			}
+		});
+	}
+	
+	function chatLogin(){		
+		var login = Ext.getCmp('login').getValue();
+		window.login=login;
+		crossDomainRequest('login',{login:login,action:'login'});
+	}
+	
+	new Ext.Window({		
+		id:'windowChat',
+		shadow:false,
+		iconCls:'icon-user',
+		title:'Вход в чат',
+		width:270,
+		height:95,
+		layout:'form',
+		bodyStyle:'padding:5px 5px 0',
+		items:[{		
+			id:'serverMessage',
+			bodyStyle:'padding:5px 5px',
+			height:230,
+			hidden:true,
+			autoScroll:true,			
+			html:'Сюда приходят сообщения'
+		},{
+			id:'login',
+			xtype:'textfield',
+			fieldLabel:'Укажите ник'			
+		}],
+		bbar:[{
+			id:'idMsgChat',
+			xtype: 'textfield',
+			width:300,
+			hidden:true,
+		},'->',{
+			id:'idLoginButton',
+			text:'Войти',
+			iconCls:'icon-user',
+			handler:chatLogin
+		}]
+	}).show();	
+});
+</script>
+</head>
+<body>
+</body>
+</html>
