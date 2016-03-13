@@ -8,7 +8,7 @@
 		}
 		.icon-pencil {
 			background-image: url(<a href="http://www.vreshenie.ru/resources/pencil.png" title="http://www.vreshenie.ru/resources/pencil.png" class="liexternal">http://www.vreshenie.ru/resources/pencil.png</a>) !important;
-}		Ъ
+}		
 	</style>
 <script>
 var messages = [];
@@ -61,7 +61,7 @@ Ext.onReady(function(){
 	function crossDomainRequest(action,params){
 		Ext.Ajax.request({
 			timeout:300,
-			url: 'http://chat-jmuse.rhcloud.com:8080/',
+			url: 'http://chat-jmuse.rhcloud.com:8080/chating',
 			params:params || {},
 			scriptTag: true,
 			success: function(r) {
