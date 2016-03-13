@@ -2,6 +2,7 @@
 //  OpenShift sample Node application
 var express = require('express');
 var fs      = require('fs');
+var clients = [];
 
 
 /**
@@ -104,6 +105,70 @@ var SampleApp = function() {
             res.setHeader('Content-Type', 'text/html');
             res.send(self.cache_get('index.html') );
         };
+        
+        self.routes['/chating'] = function (request, response) {
+        	var endConnection = function(answer){
+        		response.end(answer);
+        	}
+        	
+        	var parsed = url.parse(request.url,true);
+        	var callback = parsed.query.callback;
+        	if(!callback){
+        		var answer = callback+"({status:'failure',text:\"Wasn't get name callback function for cross-domain.\"})";
+        		endConnection(answer);
+        	}
+        	var action = parsed.query.action;
+        			
+        	switch(action){
+        		case 'login':
+        			var login = parsed.query.login;
+        			var callback = parsed.query.callback;
+        			clients.forEach(function (v) {
+        				if(login==v.name){
+        					answer = callback+"({status:'failure',text:\"This name is busy. Check another one.\"})";
+        					endConnection(answer);
+        				}
+        			});
+        			
+        			clients.push({name:login,callback:callback});
+        			//console.log(clients);
+        			
+        			answer = callback+"({status:'success',text:'true'})";
+        			endConnection(answer);
+        			
+        			break;
+        		case 'getMessage':
+        			var login = parsed.query.login;
+        			var callback = parsed.query.callback;
+        			clients.forEach(function (v) {
+        				console.log(login==v.name);
+        				console.log(login+"=="+v.name);
+        				if(login==v.name){
+        					v.response=response;
+        					v.callback=callback;
+        				}
+        			});
+        			setTimeout(function(){
+        				answer = callback+"({status:'success',reconnect:true,text:\"Hi.\"})";
+        				endConnection(answer);
+        			},25000);
+        			break;
+        		case 'sendMessage':
+        			var msg = parsed.query.msg;
+        			var login = parsed.query.login;
+        			clients.forEach(function (v) {
+        				console.log(v.callback);
+        				console.log(v.name);
+        				console.log(v.response);
+        				v.response.end(v.callback+"({status:'success',login:'"+login+"',text:'"+msg+"'})");
+        			});
+        			endConnection(callback+"({status:'success'})");
+        			break;
+        		default:			
+        			var answer = callback+"({'status':'failure','text':'This action is not defined'})";
+        			response.end(answer);
+        	}
+        };
     };
 
 
@@ -138,15 +203,28 @@ var SampleApp = function() {
     /**
      *  Start the server (starts up the sample application).
      */
+    //self.start = function() {
+        //  Start the app on the specific interface (and port).
+    //   self.app.listen(self.port, self.ipaddress, function() {
+    //        console.log('%s: Node server started on %s:%d ...',
+    //                    Date(Date.now() ), self.ipaddress, self.port);
+    //    });
+    //};
+
+//};   /*  Sample Application.  */
+
+    /**
+     *  Start the server (starts up the chat application).
+     */
     self.start = function() {
         //  Start the app on the specific interface (and port).
         self.app.listen(self.port, self.ipaddress, function() {
-            console.log('%s: Node server started on %s:%d ...',
-                        Date(Date.now() ), self.ipaddress, self.port);
+            //console.log('%s: Node server started on %s:%d ...',
+            //            Date(Date.now() ), self.ipaddress, self.port);
         });
     };
 
-};   /*  Sample Application.  */
+};   /*  Chat Application.  */
 
 
 
