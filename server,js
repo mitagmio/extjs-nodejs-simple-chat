@@ -1,3 +1,5 @@
+var server_port = process.env.OPENSHIFT_NODEJS_PORT || 8080
+var server_ip_address = process.env.OPENSHIFT_NODEJS_IP || '127.0.0.1'
 var http = require('http');
 var url = require('url');
 var sys = require('sys');
@@ -66,4 +68,6 @@ http.createServer(function (request, response) {
 			var answer = callback+"({'status':'failure','text':'This action is not defined'})";
 			response.end(answer);
 	}
-}).listen(8080);
+}).listen(server_port, server_ip_address, function () {
+  console.log( "Listening on " + server_ip_address + ", server_port " + port )
+});
