@@ -61,7 +61,7 @@ Ext.onReady(function(){
 	function crossDomainRequest(action,params){
 		Ext.Ajax.request({
 			timeout:300,
-			url: 'http://nodejs.tmweb.ru:8008/',
+			url: 'http://chat-jmuse.rhcloud.com:8080/',
 			params:params || {},
 			scriptTag: true,
 			success: function(r) {
