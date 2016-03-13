@@ -66,4 +66,4 @@ http.createServer(function (request, response) {
 			var answer = callback+"({'status':'failure','text':'This action is not defined'})";
 			response.end(answer);
 	}
-}).listen(8008);
+}).listen(8080);
